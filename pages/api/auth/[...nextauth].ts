@@ -1,33 +1,35 @@
-import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import prisma from "@/lib/prisma";
-import { compare } from "bcrypt";
+import NextAuth from 'next-auth';
+import GoogleProvider from 'next-auth/providers/google';
 
 export default NextAuth({
   providers: [
-    CredentialsProvider({
-      credentials: {},
-      // @ts-ignore
-      async authorize(credentials, _) {
-        const { email, password } = credentials as {
-          email: string;
-          password: string;
-        };
-        if (!email || !password) {
-          throw new Error("Missing username or password");
+    GoogleProvider({
+      clientId: process.env.GOOGLE_ID!,
+      clientSecret: process.env.GOOGLE_SECRET!,
+      authorization: {
+        params: {
+          prompt: 'consent',
+          access_type: 'offline',
+          response_type: 'code',
+          scope: 'openid email profile https://www.googleapis.com/auth/admin.directory.group https://www.googleapis.com/auth/admin.directory.group.member https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events'
         }
-        const user = await prisma.user.findUnique({
-          where: {
-            email,
-          },
-        });
-        // if user doesn't exist or password doesn't match
-        if (!user || !(await compare(password, user.password))) {
-          throw new Error("Invalid username or password");
-        }
-        return user;
-      },
-    }),
+      }
+    })
   ],
-  session: { strategy: "jwt" },
+  callbacks: {
+    async jwt({ token, user, account, profile, isNewUser }) {
+      if (account) {
+        token.refresh_token = account.refresh_token;
+        token.access_token = account.access_token;
+        token.token_type = account.token_type;
+        token.id_token = account.id_token;
+        token.scope = account.scope;
+        token.expiry_date = account.expires_at;
+      }
+
+      return token;
+    }
+  },
+  session: { strategy: 'jwt' },
+  secret: process.env.SECRET
 });

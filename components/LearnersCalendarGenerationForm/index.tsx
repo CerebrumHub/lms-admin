@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { DateTime } from 'luxon';
-import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { DatePicker } from '@mui/x-date-pickers';
 import TextField from '@mui/material/TextField';
@@ -13,52 +12,34 @@ const LearnersCalendarGenerationForm = (): JSX.Element => {
   const [loading, setLoading] = useState(false);
   const [startDateValue, setStartDateValue] = useState<string | null>(null);
 
-  const router = useRouter();
-
   return (
     <Paper className="flex flex-col space-y-4 px-4 py-8 sm:px-16 w-1/4" elevation={12}>
       <h2>Generation of the learner’s calendar</h2>
       <form
         onSubmit={(e) => {
-          console.log(e.currentTarget)
-          // e.preventDefault();
-          // setLoading(true);
-          // if (type === 'login') {
-          //   signIn('credentials', {
-          //     redirect: false,
-          //     email: e.currentTarget.email.value,
-          //     password: e.currentTarget.password.value
-          //     // @ts-ignore
-          //   }).then(({ ok, error }) => {
-          //     setLoading(false);
-          //     if (ok) {
-          //       router.push('/calendar');
-          //     } else {
-          //       toast.error(error);
-          //     }
-          //   });
-          // } else {
-          //   fetch('/api/auth/register', {
-          //     method: 'POST',
-          //     headers: {
-          //       'Content-Type': 'application/json'
-          //     },
-          //     body: JSON.stringify({
-          //       email: e.currentTarget.email.value,
-          //       password: e.currentTarget.password.value
-          //     })
-          //   }).then(async (res) => {
-          //     setLoading(false);
-          //     if (res.status === 200) {
-          //       toast.success('Account created! Redirecting to login...');
-          //       setTimeout(() => {
-          //         router.push('/login');
-          //       }, 2000);
-          //     } else {
-          //       toast.error(await res.text());
-          //     }
-          //   });
-          // }
+          e.preventDefault();
+          setLoading(true);
+
+          const formData = new FormData();
+
+          formData.append('startDate', e.currentTarget.startDate.value);
+          formData.append('tribeNumber', e.currentTarget.tribeNumber.value);
+          formData.append('tribeMembersFile', e.currentTarget.tribeMembersFile.files[0]);
+          formData.append('listOfEventsFile', e.currentTarget.listOfEventsFile.files[0]);
+
+          fetch('/api/calendar/generate-learners', {
+            method: 'POST',
+            body: formData,
+            // credentials: 'include'
+          }).then(async (res) => {
+            setLoading(false);
+            if (res.status === 200) {
+              toast.success('success');
+            } else {
+              const error = JSON.parse(await res.text())
+              toast.error(error?.message || 'Something went wrong');
+            }
+          });
         }}
       >
         <Stack spacing={4}>

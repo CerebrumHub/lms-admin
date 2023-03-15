@@ -18,10 +18,10 @@ const Login = (): JSX.Element => {
           </a>
           <h3 className="text-xl font-semibold">Sign In</h3>
           <p className="text-sm text-gray-500">
-            Use your email and password to sign in
+            Use your Google account
           </p>
         </div>
-        <LoginForm type="login"/>
+        <LoginForm />
       </div>
     </div>
   );

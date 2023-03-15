@@ -1,8 +1,10 @@
-import { unstable_getServerSession } from 'next-auth/next';
+'use client';
+
+import { useSession } from 'next-auth/react';
 import SignOut from '@/components/SignOut';
 
-const AuthStatus = async () => {
-  const session = await unstable_getServerSession();
+const AuthStatus = (): JSX.Element | null => {
+  const { data: session, status } = useSession();
 
   return session ? (
     <div style={{ backgroundColor: '#ECF7F5' }} className="absolute w-full flex justify-center items-center">
