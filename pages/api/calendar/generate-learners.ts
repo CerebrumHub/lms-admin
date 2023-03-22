@@ -106,8 +106,8 @@ export default async function handler(
     const admin = google.admin({ version: 'directory_v1', auth: oauth2Client });
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
-    const result = await admin.groups.list({ customer: 'my_customer' });
-    const isTribeExist = Array.isArray(result.data.groups) && result.data.groups.some((group: any) => {
+    const groupList = await admin.groups.list({ customer: 'my_customer' });
+    const isTribeExist = Array.isArray(groupList.data.groups) && groupList.data.groups.some((group: any) => {
       const existingTribeNumber: string = group.email.toLowerCase().replace('qa_tribe_', '').replace('@cerebrumhub.com', '');
 
       return existingTribeNumber === tribeNumber;
@@ -203,9 +203,11 @@ export default async function handler(
     }));
 
 
-    res.status(200).send({ message: `New group email address: ${newGroup.data.email}. Calendar ID: ${newCalendar.data.id}` });
-  } catch (e) {
-    res.status(500).send({ message: 'Something went wrong' });
+    res
+    .status(200)
+    .send({ message: `New group email address: ${newGroup.data.email}. Calendar ID: ${newCalendar.data.id}` });
+  } catch (error) {
+    res.status(500).send({ message: error?.toString() || 'Something went wrong' });
   }
 
   res.end();

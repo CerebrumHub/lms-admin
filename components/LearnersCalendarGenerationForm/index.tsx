@@ -29,15 +29,17 @@ const LearnersCalendarGenerationForm = (): JSX.Element => {
 
           fetch('/api/calendar/generate-learners', {
             method: 'POST',
-            body: formData,
+            body: formData
             // credentials: 'include'
           }).then(async (res) => {
             setLoading(false);
+
+            const result = JSON.parse(await res.text());
+
             if (res.status === 200) {
-              toast.success('success');
+              toast.success(result?.message);
             } else {
-              const error = JSON.parse(await res.text())
-              toast.error(error?.message || 'Something went wrong');
+              toast.error(result?.message || 'Something went wrong');
             }
           });
         }}

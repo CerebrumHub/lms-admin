@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { DateTime } from 'luxon';
-import { useRouter } from 'next/navigation';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { DatePicker } from '@mui/x-date-pickers';
 import TextField from '@mui/material/TextField';
@@ -10,58 +8,51 @@ import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import toast from 'react-hot-toast';
+import fileDownload from 'js-file-download';
 
 const SquadCalendarGenerationForm = (): JSX.Element => {
   const [loading, setLoading] = useState(false);
   const [startDateValue, setStartDateValue] = useState<string | null>(null);
   const [calendarRequired, setCalendarRequired] = useState<boolean>(true);
 
-  const router = useRouter();
-
   return (
     <Paper className="flex flex-col space-y-4 px-4 py-8 sm:px-16 w-1/4" elevation={12}>
       <h2>Generation of Squad calendars</h2>
       <form
         onSubmit={(e) => {
-          console.log(e.currentTarget);
-          // e.preventDefault();
-          // setLoading(true);
-          // if (type === 'login') {
-          //   signIn('credentials', {
-          //     redirect: false,
-          //     email: e.currentTarget.email.value,
-          //     password: e.currentTarget.password.value
-          //     // @ts-ignore
-          //   }).then(({ ok, error }) => {
-          //     setLoading(false);
-          //     if (ok) {
-          //       router.push('/calendar');
-          //     } else {
-          //       toast.error(error);
-          //     }
-          //   });
-          // } else {
-          //   fetch('/api/auth/register', {
-          //     method: 'POST',
-          //     headers: {
-          //       'Content-Type': 'application/json'
-          //     },
-          //     body: JSON.stringify({
-          //       email: e.currentTarget.email.value,
-          //       password: e.currentTarget.password.value
-          //     })
-          //   }).then(async (res) => {
-          //     setLoading(false);
-          //     if (res.status === 200) {
-          //       toast.success('Account created! Redirecting to login...');
-          //       setTimeout(() => {
-          //         router.push('/login');
-          //       }, 2000);
-          //     } else {
-          //       toast.error(await res.text());
-          //     }
-          //   });
-          // }
+          e.preventDefault();
+          setLoading(true);
+
+          const formData = new FormData();
+
+          formData.append('startDate', e.currentTarget.startDate.value);
+          formData.append('tribeNumber', e.currentTarget.tribeNumber.value);
+          formData.append('projectNumber', e.currentTarget.projectNumber.value);
+          formData.append('squadMembersFile', e.currentTarget.squadMembersFile.files[0]);
+
+          if (e.currentTarget.calendarRequired.value === 'true') {
+            formData.append('squadEventsFile', e.currentTarget.squadEventsFile.files[0]);
+          }
+
+          fetch('/api/calendar/generate-squad', {
+            method: 'POST',
+            body: formData
+            // credentials: 'include'
+          }).then(async (res) => {
+            setLoading(false);
+            if (res.status === 200) {
+              const header = res.headers.get('Content-Disposition');
+              const parts = header!.split(';');
+              const filename = parts[1].split('=')[1];
+
+              fileDownload(await res.blob(), filename);
+            } else {
+              const result = JSON.parse(await res.text());
+
+              toast.error(result?.message || 'Something went wrong');
+            }
+          });
         }}
       >
         <Stack spacing={4}>
@@ -129,7 +120,7 @@ const SquadCalendarGenerationForm = (): JSX.Element => {
           <FormControlLabel
             value={calendarRequired}
             onChange={(event, checked) => setCalendarRequired(checked)}
-            control={<Switch defaultChecked/>}
+            control={<Switch id="calendarRequired" defaultChecked/>}
             label="Calendar required"
           />
 

@@ -20,6 +20,8 @@
     "csv-parse": "^5.3.6",
     "formidable": "^2.1.1",
     "googleapis": "^112.0.0",
+    "js-file-download": "^0.4.12",
+    "json-2-csv": "^4.0.0",
     "luxon": "^3.2.1",
     "next": "^13.0.5",
     "next-auth": "^4.17.0",
